@@ -50,9 +50,32 @@ async function determineExtensionNameFromComposerJson() {
     return extName;
 }
 
+function parseArgs(str) {
+    const args = [];
+    let current = '';
+    let inDouble = false;
+    let inSingle = false;
+
+    for (const ch of str) {
+        if (ch === '"' && !inSingle) {
+            inDouble = !inDouble;
+        } else if (ch === "'" && !inDouble) {
+            inSingle = !inSingle;
+        } else if (ch === ' ' && !inDouble && !inSingle) {
+            if (current) args.push(current);
+            current = '';
+        } else {
+            current += ch;
+        }
+    }
+    if (current) args.push(current);
+
+    return args;
+}
+
 async function buildExtension() {
     core.info("Building the extension...");
-    const configureFlags = core.getInput("configure-flags").split(' ');
+    const configureFlags = parseArgs(core.getInput("configure-flags"));
     const buildPath = core.getInput("build-path") || ".";
     const opts = buildPath !== "." ? { cwd: buildPath } : {};
 
@@ -223,6 +246,7 @@ async function main() {
 }
 
 module.exports = {
+    parseArgs,
     determineExtensionNameFromComposerJson,
     buildExtension,
     determinePhpVersionFromPhpConfig,
