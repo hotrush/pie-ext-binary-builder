@@ -1,0 +1,39 @@
+name: Build and Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build dist and update tags
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - name: Commit dist to release tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f dist/
+          git commit -m "build: compile dist for ${{ github.event.release.tag_name }}"
+          git push origin HEAD:refs/tags/${{ github.event.release.tag_name }} --force
+      - name: Update major version tag
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          MAJOR=$(echo "$TAG" | grep -oE '^v[0-9]+')
+          if [ -n "$MAJOR" ]; then
+            git tag -f "$MAJOR"
+            git push origin "$MAJOR" --force
+            echo "Updated $MAJOR → $TAG"
+          fi

@@ -339,6 +339,32 @@ describe('determineZendThreadSafeMode', () => {
     });
 });
 
+describe('parseArgs', () => {
+    test('splits simple flags', () => {
+        expect(action.parseArgs('--enable-test --with-foo=/foo/bar'))
+            .toEqual(['--enable-test', '--with-foo=/foo/bar']);
+    });
+
+    test('respects double-quoted strings', () => {
+        expect(action.parseArgs('CFLAGS="-O2 -g" --enable-igbinary'))
+            .toEqual(['CFLAGS=-O2 -g', '--enable-igbinary']);
+    });
+
+    test('respects single-quoted strings', () => {
+        expect(action.parseArgs("CFLAGS='-O2 -g' --enable-igbinary"))
+            .toEqual(['CFLAGS=-O2 -g', '--enable-igbinary']);
+    });
+
+    test('returns empty array for empty string', () => {
+        expect(action.parseArgs('')).toEqual([]);
+    });
+
+    test('handles extra whitespace', () => {
+        expect(action.parseArgs('  --flag1   --flag2  '))
+            .toEqual(['--flag1', '--flag2']);
+    });
+});
+
 describe('buildExtension', () => {
     test('builds the extension with configure params and default build path', async () => {
         core.getInput.mockImplementation((name) => {
@@ -366,6 +392,30 @@ describe('buildExtension', () => {
         expect(exec.exec).toHaveBeenCalledWith('phpize', [], { cwd: 'some/ext/path' });
         expect(exec.exec).toHaveBeenCalledWith('./configure', ['--enable-test'], { cwd: 'some/ext/path' });
         expect(exec.exec).toHaveBeenCalledWith('make', [], { cwd: 'some/ext/path' });
+    });
+
+    test('builds with quoted configure flags', async () => {
+        core.getInput.mockImplementation((name) => {
+            if (name === 'configure-flags') return 'CFLAGS="-O2 -g" --enable-igbinary';
+            if (name === 'build-path') return '.';
+            return '';
+        });
+
+        await action.buildExtension();
+
+        expect(exec.exec).toHaveBeenCalledWith('./configure', ['CFLAGS=-O2 -g', '--enable-igbinary'], {});
+    });
+
+    test('builds with empty configure flags', async () => {
+        core.getInput.mockImplementation((name) => {
+            if (name === 'configure-flags') return '';
+            if (name === 'build-path') return '.';
+            return '';
+        });
+
+        await action.buildExtension();
+
+        expect(exec.exec).toHaveBeenCalledWith('./configure', [], {});
     });
 });
 

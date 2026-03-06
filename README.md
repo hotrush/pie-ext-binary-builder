@@ -1,5 +1,12 @@
 # Generate Pre-Packaged Binaries for PIE Extensions
 
+> **Fork of [`php/pie-ext-binary-builder`](https://github.com/php/pie-ext-binary-builder)** by James Titcumb.
+>
+> This fork adds:
+> - **`build-path` input** — build from a subdirectory (useful for mirror repos where extension source lives in a subfolder)
+> - **Asset replacement** — re-uploads the release asset if one with the same name already exists
+> - **CI-built dist** — `dist/` is built on release via GitHub Actions, not committed to the repo
+
 This is a GitHub action designed to help generate pre-packaged binaries for
 [PIE (PHP Installer for Extensions)](https://github.com/php/pie) extensions and attach
 them to your GitHub releases. It will:
@@ -21,9 +28,10 @@ a release ready for the action to upload the builds to.
 > a draft release, otherwise uploading the assets will fail.
 
 ```yaml
-uses: php/pie-ext-binary-builder@0.0.2
+uses: pie-extensions/pie-ext-binary-builder@v1
 with:
   configure-flags: '--enable-something --enable-other-things'
+  build-path: 'ext'  # optional, defaults to repo root
   release-tag: ${{ github.ref_name }}
   github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -35,6 +43,7 @@ with:
 | `release-tag`     | The tag to use when building the extension; there must be an existing draft release for the tag | `true`   | -       |
 | `github-token`    | The GitHub token to use. Usually `${{ secrets.GITHUB_TOKEN }}` would be fine for most cases.    | `true`   | -       |
 | `configure-flags` | If you need to pass additional flags to the `./configure` command, specify them here            | `false`  | `''`    |
+| `build-path`      | Path to the extension source directory containing `config.m4`, relative to repo root            | `false`  | `'.'`   |
 
 ### Outputs
 
@@ -119,7 +128,7 @@ jobs:
       # the given tag name
       - name: Build and release
         id: php-ext-binary-builder
-        uses: php/pie-ext-binary-builder@0.0.2
+        uses: pie-extensions/pie-ext-binary-builder@v1
         with:
           release-tag: ${{ github.ref_name }}
           github-token: ${{ secrets.GITHUB_TOKEN }}

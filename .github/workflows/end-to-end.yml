@@ -41,17 +41,10 @@ jobs:
           - macos-15-intel
           - macos-latest
         php-versions:
-#          - 5.6 @todo test ext doesn't currently build on 5.6
-          - 7.0
-          - 7.1
-          - 7.2
-          - 7.3
-          - 7.4
-          - 8.0
-          - 8.1
-          - 8.2
-          - 8.3
-          - 8.4
+          - '8.2'
+          - '8.3'
+          - '8.4'
+          - '8.5'
         zts-mode:
           - ts
           - nts
