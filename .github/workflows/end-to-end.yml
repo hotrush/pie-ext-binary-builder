@@ -76,6 +76,18 @@ jobs:
           # debug: ${{ matrix.zend-debug }} @todo may not be able to use https://github.com/shivammathur/setup-php/issues/816
           phpts: ${{ matrix.zts-mode }}
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build dist
+        run: npm run build
+
       - name: Run the action
         id: pie-ext-binary-builder
         uses: ./
